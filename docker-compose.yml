@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vidici-app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - vidici_net
+
+  web:
+    image: nginx:alpine
+    container_name: vidici_web
+    ports:
+      - "8102:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on:
+      - app
+    networks:
+      - vidici_net
+
+  db:
+    image: postgres:15
+    container_name: vidici_db
+    environment:
+      POSTGRES_DB: vidici_db
+      POSTGRES_USER: vidici_user
+      POSTGRES_PASSWORD: v1dichip@s5vvord
+    ports:
+      - "5453:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - vidici_net
+
+networks:
+  vidici_net:
+
+volumes:
+  db_data:

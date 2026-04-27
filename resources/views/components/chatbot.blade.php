@@ -1,0 +1,495 @@
+<div x-data="chatbot()" class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[999] font-sans">
+
+    <button @click="toggleChat()" :class="isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'"
+        class="w-14 h-14 bg-gradient-to-r from-cyan-500 to-fuchsia-600 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center text-white hover:scale-110 hover:shadow-[0_0_25px_rgba(217,70,239,0.6)] transition-all duration-300 absolute bottom-0 right-0 border border-white/20">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+        <span x-show="unread > 0"
+            class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm border-2 border-zinc-950"
+            x-text="unread" style="display: none;"></span>
+    </button>
+
+    <div x-show="isOpen" x-transition:enter="transition ease-out duration-300 origin-bottom-right"
+        x-transition:enter-start="opacity-0 scale-50 translate-y-10"
+        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200 origin-bottom-right"
+        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+        x-transition:leave-end="opacity-0 scale-50 translate-y-10" style="display: none;"
+        class="absolute bottom-0 right-0 w-[calc(100vw-2rem)] sm:w-[380px] h-[550px] max-h-[85vh] bg-zinc-950/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 flex flex-col overflow-hidden">
+
+        <div
+            class="bg-zinc-900/50 border-b border-white/10 p-3 sm:p-4 flex items-center justify-between shadow-md z-10 shrink-0 backdrop-blur-md relative overflow-hidden">
+
+            <div class="absolute -top-6 -left-6 w-20 h-20 bg-cyan-500/20 blur-xl rounded-full pointer-events-none">
+            </div>
+            <div
+                class="absolute -bottom-6 -right-6 w-20 h-20 bg-fuchsia-500/20 blur-xl rounded-full pointer-events-none">
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 relative z-10">
+                <div
+                    class="w-8 h-8 sm:w-10 sm:h-10 bg-zinc-800 rounded-full flex items-center justify-center text-base sm:text-xl shadow-inner border border-white/20">
+                    <span class="animate-pulse">🤖</span>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-sm sm:text-base leading-tight tracking-wide">
+                        VIDICI Assistant
+                    </h3>
+                    <p
+                        class="text-cyan-400 text-[9px] sm:text-[10px] flex items-center gap-1 mt-0.5 tracking-widest uppercase font-medium">
+                        <span
+                            class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_5px_#22d3ee]"></span>
+                        Online
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1 sm:gap-2 relative z-10">
+                <button @click="resetChat()" title="Mulai Chat Baru"
+                    class="text-zinc-300 hover:text-white hover:bg-white/10 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 border border-transparent hover:border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hidden sm:block">New
+                        Chat</span>
+                </button>
+                <button @click="toggleChat()" title="Tutup Chat"
+                    class="text-zinc-400 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="chat-container"
+            class="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-950/50 scroll-smooth relative custom-scrollbar">
+
+            <template x-for="(msg, index) in messages" :key="index">
+                <div class="flex flex-col" :class="msg.sender === 'user' ? 'items-end' : 'items-start'">
+                    <span class="text-[9px] text-zinc-500 mb-1 px-1 font-bold tracking-widest uppercase"
+                        x-text="msg.sender === 'user' ? 'Anda' : 'Vidici Bot'"></span>
+                    <div class="max-w-[85%] px-4 py-2.5 rounded-2xl text-xs sm:text-sm shadow-md font-light leading-relaxed tracking-wide border"
+                        :class="msg.sender === 'user' ?
+                            'bg-gradient-to-br from-cyan-600 to-cyan-500 text-white rounded-tr-sm border-cyan-400/30' :
+                            'bg-zinc-900 text-zinc-300 border-white/10 rounded-tl-sm'"
+                        x-html="msg.text"></div>
+                </div>
+            </template>
+
+            <div x-show="!selectedTopic" class="flex flex-col gap-2 mt-2" style="display: none;">
+                <p class="text-xs font-bold text-zinc-500 text-center mb-2 uppercase tracking-widest">Pilih Topik
+                    Diskusi:</p>
+                <template x-for="topic in topics" :key="topic">
+                    <button @click="setTopic(topic)"
+                        class="w-full text-left px-4 py-3 bg-zinc-900 border border-white/10 hover:border-cyan-500/50 hover:bg-zinc-800 rounded-xl text-xs sm:text-sm font-bold text-zinc-300 hover:text-cyan-400 transition-all shadow-sm flex items-center justify-between group">
+                        <span x-text="topic"></span>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 text-zinc-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-transform"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </template>
+            </div>
+
+            <div x-show="selectedTopic && !isTyping && !isFinished" class="flex flex-wrap gap-2 mt-4 pb-2"
+                style="display: none;">
+                <button @click="reselectTopic()"
+                    class="px-3 py-1.5 bg-zinc-900 border border-white/10 hover:border-cyan-500 hover:bg-zinc-800 text-zinc-300 hover:text-cyan-400 text-[10px] sm:text-xs font-bold rounded-full transition-colors shadow-sm flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Pilih Topik Lain
+                </button>
+                <button x-show="!followUpMode" @click="triggerFollowUp()"
+                    class="px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[10px] sm:text-xs font-bold rounded-full transition-colors shadow-sm flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-cyan-400" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Akhiri & Hubungi CS
+                </button>
+            </div>
+
+            <div x-show="isTyping" class="flex items-start" style="display: none;">
+                <div
+                    class="bg-zinc-900 border border-white/10 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5">
+                    <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce"></div>
+                    <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.1s">
+                    </div>
+                    <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-bounce" style="animation-delay: 0.2s">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 sm:p-4 bg-zinc-900/80 border-t border-white/10 z-10 backdrop-blur-xl" x-show="selectedTopic">
+            <form @submit.prevent="sendMessage()" class="relative flex items-center">
+                <input x-model="inputText" type="text"
+                    :placeholder="followUpMode ? 'Ketik Email / No WA Anda...' : 'Ketik pesan Anda...'"
+                    :disabled="isFinished || isTyping"
+                    class="w-full bg-zinc-950 border border-white/10 text-white text-xs sm:text-sm px-4 py-3 pr-12 rounded-xl focus:outline-none focus:border-cyan-500 transition-all disabled:opacity-50 placeholder-zinc-500">
+
+                <button type="submit" :disabled="!inputText.trim() || isFinished || isTyping"
+                    class="absolute right-1.5 p-2 bg-gradient-to-r from-cyan-500 to-fuchsia-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:from-zinc-600 disabled:to-zinc-600 transition-all shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-0.5" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path
+                            d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                    </svg>
+                </button>
+            </form>
+            <div class="text-center mt-2" x-show="!isFinished">
+                <span class="text-[8px] sm:text-[9px] font-bold text-zinc-600 uppercase tracking-widest">Vidici
+                    Artificial Intelligence</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #3f3f46;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #06b6d4;
+    }
+</style>
+
+<script>
+    function chatbot() {
+        return {
+            isOpen: false,
+            unread: 0,
+            inputText: '',
+            isTyping: false,
+            followUpMode: false,
+            isFinished: false,
+            selectedTopic: null,
+            lastUserMessage: '',
+            leadId: null,
+
+            lastActivity: Date.now(),
+            hasNudged: false,
+            activityTimer: null,
+
+            topics: [
+                'Profil Perusahaan',
+                'CORENETA ERP',
+                'Layanan Utama',
+                'Karier & Kontak',
+            ],
+
+            messages: [],
+
+            init() {
+                // RESET CACHE BROWSER LAMA AGAR TOPIK BARU MUNCUL
+                let savedVersion = localStorage.getItem('Vidici_bot_version');
+                if (savedVersion !== 'v2') {
+                    localStorage.removeItem('Vidici_chatbot_state');
+                    localStorage.setItem('Vidici_bot_version', 'v2');
+                }
+                this.loadState();
+            },
+
+            loadState() {
+                let saved = localStorage.getItem('Vidici_chatbot_state');
+                if (saved) {
+                    let data = JSON.parse(saved);
+                    this.isOpen = data.isOpen || false;
+                    this.unread = data.unread || 0;
+                    this.messages = data.messages || [];
+                    this.selectedTopic = data.selectedTopic || null;
+                    this.followUpMode = data.followUpMode || false;
+                    this.isFinished = data.isFinished || false;
+                    this.leadId = data.leadId || null;
+                    this.lastActivity = data.lastActivity || Date.now();
+                    this.hasNudged = data.hasNudged || false;
+
+                    if (this.isOpen) this.scrollToBottom();
+                } else {
+                    this.unread = 1;
+                    this.lastActivity = Date.now();
+                    this.sendWelcome();
+                }
+
+                this.startActivityMonitor();
+            },
+
+            saveState() {
+                localStorage.setItem('Vidici_chatbot_state', JSON.stringify({
+                    isOpen: this.isOpen,
+                    unread: this.unread,
+                    messages: this.messages,
+                    selectedTopic: this.selectedTopic,
+                    followUpMode: this.followUpMode,
+                    isFinished: this.isFinished,
+                    leadId: this.leadId,
+                    lastActivity: this.lastActivity,
+                    hasNudged: this.hasNudged
+                }));
+            },
+
+            startActivityMonitor() {
+                if (this.activityTimer) clearInterval(this.activityTimer);
+
+                const checkTimeout = () => {
+                    if (!this.selectedTopic || this.isFinished) return;
+
+                    let elapsed = Date.now() - this.lastActivity;
+
+                    if (elapsed >= 900000) {
+                        this.triggerAutoClose();
+                    } else if (elapsed >= 600000 && !this.hasNudged) {
+                        this.hasNudged = true;
+                        this.messages.push({
+                            sender: 'bot',
+                            text: 'Bot perhatikan tidak ada balasan cukup lama. Apakah Anda masih di sana? Sesi ini akan otomatis diakhiri dalam 5 menit.'
+                        });
+                        this.playNotification();
+                        if (!this.isOpen) this.unread++;
+                        this.saveState();
+                        this.scrollToBottom();
+                    }
+                };
+
+                checkTimeout();
+                this.activityTimer = setInterval(checkTimeout, 60000);
+            },
+
+            updateActivity() {
+                this.lastActivity = Date.now();
+                this.hasNudged = false;
+            },
+
+            async triggerAutoClose() {
+                this.isFinished = true;
+                this.followUpMode = false;
+                this.messages.push({
+                    sender: 'bot',
+                    text: 'Sesi chat telah diakhiri otomatis oleh sistem karena tidak ada aktivitas.'
+                });
+                this.saveState();
+                this.scrollToBottom();
+
+                if (this.leadId) {
+                    try {
+                        await fetch('/api/chatbot/send', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                is_autoclose: true,
+                                chat_history: this.messages,
+                                lead_id: this.leadId
+                            })
+                        });
+                    } catch (e) {}
+                }
+            },
+
+            playNotification() {
+                try {
+                    let AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) return;
+                    let ctx = new AudioContext();
+                    let osc = ctx.createOscillator();
+                    let gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                } catch (e) {}
+            },
+
+            sendWelcome() {
+                this.messages = [{
+                    sender: 'bot',
+                    text: 'Halo 👋! Selamat datang di pusat bantuan Vidici. Agar lebih akurat, topik apa yang ingin Anda tanyakan hari ini?'
+                }];
+                this.saveState();
+            },
+
+            resetChat() {
+                this.selectedTopic = null;
+                this.followUpMode = false;
+                this.isFinished = false;
+                this.inputText = '';
+                this.unread = 1;
+                this.leadId = null;
+                this.updateActivity();
+                this.sendWelcome();
+            },
+
+            reselectTopic() {
+                this.selectedTopic = null;
+                this.messages.push({
+                    sender: 'bot',
+                    text: 'Topik apa lagi yang ingin Anda bahas?'
+                });
+                this.updateActivity();
+                this.saveState();
+                this.scrollToBottom();
+            },
+
+            setTopic(topic) {
+                this.selectedTopic = topic;
+                this.messages.push({
+                    sender: 'user',
+                    text: `Saya ingin bertanya seputar <b>${topic}</b>`
+                });
+                this.updateActivity();
+                this.saveState();
+
+                this.isTyping = true;
+                this.scrollToBottom();
+
+                setTimeout(() => {
+                    this.isTyping = false;
+                    this.messages.push({
+                        sender: 'bot',
+                        text: `Baik, mari kita bahas tentang <b>${topic}</b>. Ada hal spesifik yang bisa Mimin jelaskan?`
+                    });
+                    this.playNotification();
+                    this.saveState();
+                    this.scrollToBottom();
+                }, 800);
+            },
+
+            toggleChat() {
+                this.isOpen = !this.isOpen;
+                if (this.isOpen) {
+                    this.unread = 0;
+                    this.updateActivity();
+                }
+                this.saveState();
+                this.scrollToBottom();
+            },
+
+            scrollToBottom() {
+                setTimeout(() => {
+                    const container = document.getElementById('chat-container');
+                    if (container) container.scrollTop = container.scrollHeight;
+                }, 100);
+            },
+
+            triggerFollowUp() {
+                this.followUpMode = true;
+                this.messages.push({
+                    sender: 'bot',
+                    text: 'Tentu. Silakan ketikkan <b>Email atau No WA</b> Anda di bawah ini, agar tim teknis/CS kami bisa segera mengecek dan menghubungi Anda.'
+                });
+                this.playNotification();
+                this.updateActivity();
+                this.saveState();
+                this.scrollToBottom();
+            },
+
+            async sendMessage() {
+                if (!this.inputText.trim()) return;
+
+                const msgText = this.inputText;
+                this.messages.push({
+                    sender: 'user',
+                    text: msgText
+                });
+                this.inputText = '';
+                this.updateActivity();
+                this.saveState();
+
+                if (!this.followUpMode) {
+                    this.lastUserMessage = msgText;
+                }
+
+                this.scrollToBottom();
+                this.isTyping = true;
+
+                try {
+                    // AMBIL TOKEN CSRF: Pastikan tag meta ada di head HTML Anda
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                    const response = await fetch('/api/chatbot/send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        },
+                        body: JSON.stringify({
+                            message: msgText,
+                            topic: this.selectedTopic,
+                            is_followup: this.followUpMode,
+                            last_chat: this.lastUserMessage,
+                            chat_history: this.messages,
+                            lead_id: this.leadId
+                        })
+                    });
+
+                    // Jika error 419 (Token Expired) atau 500 (Server Error)
+                    if (!response.ok) {
+                        const errorMsg = await response.text();
+                        console.error("Server Error Details:", errorMsg);
+                        throw new Error('Gagal menghubungi server');
+                    }
+
+                    const data = await response.json();
+                    if (data.lead_id) this.leadId = data.lead_id;
+
+                    setTimeout(() => {
+                        this.isTyping = false;
+                        this.messages.push({
+                            sender: 'bot',
+                            text: data.reply
+                        });
+                        this.playNotification();
+
+                        if (data.is_finished) {
+                            this.isFinished = true;
+                            this.followUpMode = false;
+                        }
+
+                        if (!this.isOpen) this.unread++;
+                        this.saveState();
+                        this.scrollToBottom();
+                    }, 800);
+
+                } catch (e) {
+                    this.isTyping = false;
+                    console.error("Chatbot Error:", e);
+                    this.messages.push({
+                        sender: 'bot',
+                        text: 'Maaf, Mimin sedang gangguan jaringan. Coba lagi ya.'
+                    });
+                    this.saveState();
+                    this.scrollToBottom();
+                }
+            }
+        }
+    }
+</script>
